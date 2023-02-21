@@ -17,7 +17,6 @@ const generateRandomString = function() {
 
 app.set("view engine", "ejs");
 
-// converting the request body from a Buffer into string
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
@@ -38,10 +37,10 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-// form submission and after form submission and redirection
+// form submission and redirection
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  console.log(req.body);
+  // console.log(req.body);
   res.redirect(`/urls/${shortURL}`);
   urlDatabase[shortURL] = req.body["longURL"];
 
@@ -55,14 +54,11 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   if (!(req.params.id in urlDatabase)) {
-    res.status(404).send('Page not found.');
+    res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
   }
-  if (req.params.id in urlDatabase) {
-    res.redirect(longURL);
-  }
+  res.redirect(longURL);
 });
 
-// rendering response that contains HTML code in the client browser
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
