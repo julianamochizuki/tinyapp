@@ -18,6 +18,11 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
+    <div class="navbar-text">
+    <!-- <% if (username) { %> -->
+    <span>Logged in as <%= username %></span>
+    <!-- <% }%>
+    <% if (!username) { %> -->
       <form class="form-inline my-2 my-lg-0" action="/login" method="POST">
         <label for="Login">Login </label>
         <input
@@ -29,5 +34,7 @@
         />
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
+      <!-- <% }%> -->
+    </div>
   </nav>
 </header>
