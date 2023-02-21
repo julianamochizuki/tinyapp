@@ -9,7 +9,7 @@ const urlDatabase = {
 const generateRandomString = function() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let randomString = "";
-  for (let i = 0; i <= 6; i++) {
+  for (let i = 0; i < 6; i++) {
     randomString += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return randomString;
@@ -38,14 +38,28 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// form submission and after form submission and redirection
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString();
+  console.log(req.body);
+  res.redirect(`/urls/${shortURL}`);
+  urlDatabase[shortURL] = req.body["longURL"];
+
 });
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase };
   res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  if (!(req.params.id in urlDatabase)) {
+    res.status(404).send('Page not found.');
+  }
+  if (req.params.id in urlDatabase) {
+    res.redirect(longURL);
+  }
 });
 
 // rendering response that contains HTML code in the client browser
