@@ -41,9 +41,8 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   // console.log(req.body);
-  res.redirect(`/urls/${shortURL}`);
   urlDatabase[shortURL] = req.body["longURL"];
-
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -57,6 +56,11 @@ app.get("/u/:id", (req, res) => {
     res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
   }
   res.redirect(longURL);
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect(`/urls`);
 });
 
 app.get("/hello", (req, res) => {
