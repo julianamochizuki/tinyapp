@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -29,13 +32,19 @@ app.get("/urls.json", (req, res) => {
 
 // Passes the URL data to the template
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    username: req.cookies["username"],
+    urls: urlDatabase
+  };
   res.render("urls_index", templateVars);
 });
 
 // Page to create new tinyURL
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_new", templateVars);
 });
 
 // Submits new URL
@@ -47,7 +56,11 @@ app.post("/urls", (req, res) => {
 
 // Shows generated tinyURL
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase };
+  const templateVars = {
+    username: req.cookies["username"],
+    id: req.params.id,
+    longURL: urlDatabase
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -81,6 +94,26 @@ app.post("/urls/:id", (req, res) => {
 app.post("/login", (req, res) => {
   res.cookie('username', `${req.body["username"]}`);
   res.redirect(`/urls`);
+});
+
+// Logout and clear the cookie
+app.post("/logout", (req, res) => {
+  res.clearCookie('username', `${req.body["username"]}`);
+  res.redirect(`/urls`);
+});
+
+// Register page
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("register", templateVars);
+});
+
+//
+app.post("/register", (req, res) => {
+  res.cookie('username', `${req.body["username"]}`);
+  res.redirect(`/register/username`);
 });
 
 app.get("/hello", (req, res) => {
