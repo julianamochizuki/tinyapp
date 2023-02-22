@@ -54,10 +54,10 @@ app.get("/urls.json", (req, res) => {
 
 // Passes the URL data to the template
 app.get("/urls", (req, res) => {
-  let id = req.cookies["user_id"];
+  let userId = req.cookies["user_id"];
   const templateVars = {
     // username: req.cookies["username"],
-    user: users[id],
+    user: users[userId],
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -65,9 +65,9 @@ app.get("/urls", (req, res) => {
 
 // Page to create new tinyURL
 app.get("/urls/new", (req, res) => {
-  let id = req.cookies["user_id"];
+  let userId = req.cookies["user_id"];
   const templateVars = {
-    user: users[id]
+    user: users[userId]
   };
   res.render("urls_new", templateVars);
 });
@@ -81,9 +81,9 @@ app.post("/urls", (req, res) => {
 
 // Shows generated tinyURL
 app.get("/urls/:id", (req, res) => {
-  let id = req.cookies["user_id"];
+  let userId = req.cookies["user_id"];
   const templateVars = {
-    user: users[id],
+    user: users[userId],
     id: req.params.id,
     longURL: urlDatabase
   };
@@ -121,33 +121,33 @@ app.post("/login", (req, res) => {
   const userEmail = req.body["email"];
   const userPassword = req.body["password"];
   const userInTheDatabase = getUserByEmail(userEmail);
-
   if (!userInTheDatabase) {
-    res.sendStatus(403);
+    return res.sendStatus(403);
   }
-  if (userInTheDatabase) {
-    if (userPassword !== userInTheDatabase.password) {
-      res.sendStatus(403);
-    }
-    res.cookie(`user_id`, `${userInTheDatabase.id}`);
-    res.redirect(`/urls`);
+  if (userPassword !== userInTheDatabase.password) {
+    return res.sendStatus(403);
   }
-
+  res.cookie(`user_id`, `${userInTheDatabase.id}`);
+  res.redirect(`/urls`);
 });
 
 // Logout and clear the cookie
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id', `${req.body["id"]}`);
+  res.clearCookie('user_id');
   res.redirect(`/login`);
 });
 
 // Register page
 app.get("/register", (req, res) => {
-  let id = req.cookies["user_id"];
+  let userId = req.cookies["user_id"];
+  if (users[userId]) {
+    res.redirect('/urls');
+  }
   const templateVars = {
-    user: users[id],
+    user: users[userId],
   };
   res.render("register", templateVars);
+
 });
 
 // Submits new user registration
@@ -155,7 +155,7 @@ app.post("/register", (req, res) => {
   const userEmail = req.body["email"];
   const userPassword = req.body["password"];
   if (!userEmail || !userPassword || getUserByEmail(userEmail)) {
-    res.sendStatus(400);
+    return res.sendStatus(400);
   } else {
     const userRandomID = generateRandomString();
     users[userRandomID] = {
@@ -171,9 +171,12 @@ app.post("/register", (req, res) => {
 
 // Login page
 app.get("/login", (req, res) => {
-  let id = req.cookies["user_id"];
+  const userId = req.cookies["user_id"];
+  if (userId) {
+    res.redirect('/urls');
+  }
   const templateVars = {
-    user: users[id],
+    user: users[userId],
   };
   res.render("login", templateVars);
 });
