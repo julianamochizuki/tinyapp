@@ -19,25 +19,21 @@
       </div>
     </div>
     <nav class="navbar navbar-expand-md navbar-dark bg-success">
-      <% if (username) { %>
-        <div class="nav-item" style="margin: 1em">Logged in as: <%= username%></div>
+      <% if (user) { %>
+        <div class="nav-item" style="margin: 1em">Logged in as: <%= user.email %></div>
         <form class="form-inline my-2 my-lg-2" action="/logout" method="POST">
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
+      </nav>
+      <% } else { %>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+          <div class="navbar-nav">
+            <nav class="navbar navbar-expand-md navbar-dark bg-success"></nav>
+            <a class="nav-item nav-link my-2 my-lg-2" href="/login">Login</a>
+            <a class="nav-item nav-link my-2 my-lg-2" href="/register">Register</a>
+          </div>
+        </div>
       <% }%>
     </nav>
-      <% if (!username) { %>
-        <form class="form-inline my-2 my-lg-0" action="/login" method="POST">
-          <input
-          class="form-control"
-          type="text"
-          name="username"
-          placeholder="Username"
-          style="width: 300px; margin: 1em"
-          />
-          <button type="submit" class="btn btn-outline-dark">Login</button>
-        </form>
-      <% }%>
-    </div>
   </nav>
 </header>
