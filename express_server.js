@@ -2,7 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
+
 app.use(cookieParser());
+app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true }));
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -40,10 +43,6 @@ const getUserByEmail = email => {
   return null;
 };
 
-app.set("view engine", "ejs");
-
-app.use(express.urlencoded({ extended: true }));
-
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -54,9 +53,8 @@ app.get("/urls.json", (req, res) => {
 
 // Passes the URL data to the template
 app.get("/urls", (req, res) => {
-  let userId = req.cookies["user_id"];
+  const userId = req.cookies["user_id"];
   const templateVars = {
-    // username: req.cookies["username"],
     user: users[userId],
     urls: urlDatabase
   };
@@ -65,7 +63,10 @@ app.get("/urls", (req, res) => {
 
 // Page to create new tinyURL
 app.get("/urls/new", (req, res) => {
-  let userId = req.cookies["user_id"];
+  const userId = req.cookies["user_id"];
+  if (!userId) {
+    return res.redirect('/login');
+  }
   const templateVars = {
     user: users[userId]
   };
@@ -74,6 +75,10 @@ app.get("/urls/new", (req, res) => {
 
 // Submits new URL
 app.post("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  if (!userId) {
+    return res.send("<html><body><h2>Please login to create new shortURL\n</h2>/body></html>");
+  }
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body["longURL"];
   res.redirect(`/urls/${shortURL}`);
@@ -81,7 +86,7 @@ app.post("/urls", (req, res) => {
 
 // Shows generated tinyURL
 app.get("/urls/:id", (req, res) => {
-  let userId = req.cookies["user_id"];
+  const userId = req.cookies["user_id"];
   const templateVars = {
     user: users[userId],
     id: req.params.id,
@@ -94,7 +99,7 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   if (!(req.params.id in urlDatabase)) {
-    res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
+    return res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
   }
   res.redirect(longURL);
 });
@@ -139,9 +144,9 @@ app.post("/logout", (req, res) => {
 
 // Register page
 app.get("/register", (req, res) => {
-  let userId = req.cookies["user_id"];
+  const userId = req.cookies["user_id"];
   if (users[userId]) {
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
   const templateVars = {
     user: users[userId],
@@ -166,14 +171,13 @@ app.post("/register", (req, res) => {
     res.cookie(`user_id`, `${userRandomID}`);
     res.redirect(`/urls`);
   }
-  // console.log(users);
 });
 
 // Login page
 app.get("/login", (req, res) => {
   const userId = req.cookies["user_id"];
   if (userId) {
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
   const templateVars = {
     user: users[userId],
