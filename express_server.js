@@ -31,6 +31,15 @@ const generateRandomString = function() {
   return randomString;
 };
 
+const getUserByEmail = email => {
+  for (const key in users) {
+    if (users[key]["email"] === email) {
+      return users[key];
+    }
+  }
+  return null;
+};
+
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
@@ -130,15 +139,21 @@ app.get("/register", (req, res) => {
 
 // Submits new user registration
 app.post("/register", (req, res) => {
-  const userRandomID = generateRandomString();
-  users[userRandomID] = {
-    id: userRandomID,
-    email: req.body["email"],
-    password: req.body["password"]
-  };
-  res.cookie(`user_id`, `${userRandomID}`);
+  const userEmail = req.body["email"];
+  const userPassword = req.body["password"];
+  if (!userEmail || !userPassword || getUserByEmail(userEmail)) {
+    res.sendStatus(400);
+  } else {
+    const userRandomID = generateRandomString();
+    users[userRandomID] = {
+      id: userRandomID,
+      email: userEmail,
+      password: userPassword
+    };
+    res.cookie(`user_id`, `${userRandomID}`);
+    res.redirect(`/urls`);
+  }
   // console.log(users);
-  res.redirect(`/urls`);
 });
 
 app.get("/hello", (req, res) => {
