@@ -57,7 +57,7 @@ app.get("/urls", (req, res) => {
   let id = req.cookies["user_id"];
   const templateVars = {
     // username: req.cookies["username"],
-    user: users[id],  // user {id, email, password}
+    user: users[id],
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -138,7 +138,7 @@ app.post("/login", (req, res) => {
 // Logout and clear the cookie
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id', `${req.body["id"]}`);
-  res.redirect(`/urls`);
+  res.redirect(`/login`);
 });
 
 // Register page
