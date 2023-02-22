@@ -118,8 +118,21 @@ app.post("/urls/:id", (req, res) => {
 
 // Submits login info and sets the cookie
 app.post("/login", (req, res) => {
-  res.cookie('username', `${req.body["username"]}`);
-  res.redirect(`/urls`);
+  const userEmail = req.body["email"];
+  const userPassword = req.body["password"];
+  const userInTheDatabase = getUserByEmail(userEmail);
+
+  if (!userInTheDatabase) {
+    res.sendStatus(403);
+  }
+  if (userInTheDatabase) {
+    if (userPassword !== userInTheDatabase.password) {
+      res.sendStatus(403);
+    }
+    res.cookie(`user_id`, `${userInTheDatabase.id}`);
+    res.redirect(`/urls`);
+  }
+
 });
 
 // Logout and clear the cookie
