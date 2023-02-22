@@ -19,14 +19,13 @@
       </div>
     </div>
     <nav class="navbar navbar-expand-md navbar-dark bg-success">
-      <% if (username) { %>
-        <div class="nav-item" style="margin: 1em">Logged in as: <%= username%></div>
+      <% if (user) { %>
+        <div class="nav-item" style="margin: 1em">Logged in as: <%= user.email %></div>
         <form class="form-inline my-2 my-lg-2" action="/logout" method="POST">
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
-      <% }%>
+      <% } else { %>
     </nav>
-      <% if (!username) { %>
         <form class="form-inline my-2 my-lg-0" action="/login" method="POST">
           <input
           class="form-control"

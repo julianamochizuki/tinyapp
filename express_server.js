@@ -45,8 +45,10 @@ app.get("/urls.json", (req, res) => {
 
 // Passes the URL data to the template
 app.get("/urls", (req, res) => {
+  let id = req.cookies["user_id"];
   const templateVars = {
-    username: req.cookies["username"],
+    // username: req.cookies["username"],
+    user: users[id],  // user {id:, email, password}
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -131,7 +133,7 @@ app.post("/register", (req, res) => {
     email: req.body["email"],
     password: req.body["password"]
   };
-  res.cookie(`user_${userRandomID}`, `${userRandomID}`);
+  res.cookie(`user_id`, `${userRandomID}`);
   // console.log(users);
   res.redirect(`/urls`);
 });
