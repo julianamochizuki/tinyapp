@@ -3,7 +3,7 @@ const cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080;
 const bcrypt = require("bcryptjs");
-
+const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers.js');
 
 const urlDatabase = {
   "b2xVn2": {
@@ -29,36 +29,6 @@ const users = {
   },
 };
 
-const generateRandomString = function() {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let randomString = "";
-  for (let i = 0; i < 6; i++) {
-    randomString += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return randomString;
-};
-
-const getUserByEmail = function(email) {
-  for (const key in users) {
-    if (users[key]["email"] === email) {
-      return users[key];
-    }
-  }
-  return null;
-};
-
-const urlsForUser = function(id) {
-  let result = {};
-  for (const key in urlDatabase) {
-    if (urlDatabase[key].userId === id) {
-      result[key] = {
-        longURL: urlDatabase[key].longURL
-      };
-    }
-  }
-  return result;
-};
-
 app.set("view engine", "ejs");
 app.use(cookieSession({
   name: 'session',
@@ -82,7 +52,7 @@ app.get("/urls", (req, res) => {
   }
   const templateVars = {
     user: users[userId],
-    urls: urlsForUser(userId)
+    urls: urlsForUser(userId, urlDatabase)
   };
   res.render("urls_index", templateVars);
 });
@@ -119,7 +89,7 @@ app.get("/urls/:id", (req, res) => {
   if (!userId) {
     return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
   }
-  if (!(req.params.id in urlsForUser(userId))) {
+  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
     return res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
   }
   const templateVars = {
@@ -136,7 +106,7 @@ app.get("/u/:id", (req, res) => {
   if (!userId) {
     return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
   }
-  if (!(req.params.id in urlsForUser(userId))) {
+  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
     return res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
   }
   const longURL = urlDatabase[req.params.id]["longURL"];
@@ -149,7 +119,7 @@ app.post("/urls/:id/delete", (req, res) => {
   if (!userId) {
     return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
   }
-  if (!(req.params.id in urlsForUser(userId))) {
+  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
     return res.status(404).send("<html><body><h2>ShortURL does not exist.\n</h2></body></html>\n");
   }
   delete urlDatabase[req.params.id];
@@ -162,7 +132,7 @@ app.post("/urls/:id/edit", (req, res) => {
   if (!userId) {
     return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
   }
-  if (!(req.params.id in urlsForUser(userId))) {
+  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
     return res.status(404).send("<html><body><h2>ShortURL does not exist.\n</h2></body></html>\n");
   }
   res.redirect(`/urls/${req.params.id}`);
@@ -182,7 +152,7 @@ app.post("/urls/:id", (req, res) => {
 app.post("/login", (req, res) => {
   const userEmail = req.body["email"];
   const userPassword = req.body["password"];
-  const userInTheDatabase = getUserByEmail(userEmail);
+  const userInTheDatabase = getUserByEmail(userEmail, users);
   if (!userInTheDatabase) {
     return res.sendStatus(403);
   }
@@ -217,7 +187,7 @@ app.post("/register", (req, res) => {
   const userEmail = req.body["email"];
   const userPassword = req.body["password"];
   const hashedPassword = bcrypt.hashSync(userPassword, 10);
-  if (!userEmail || !userPassword || getUserByEmail(userEmail)) {
+  if (!userEmail || !userPassword || getUserByEmail(userEmail, users)) {
     return res.sendStatus(400);
   } else {
     const userRandomID = generateRandomString();
