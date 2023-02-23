@@ -1,7 +1,9 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;
-const cookieParser = require('cookie-parser');
+
 
 const urlDatabase = {
   "b2xVn2": {
@@ -182,7 +184,7 @@ app.post("/login", (req, res) => {
   if (!userInTheDatabase) {
     return res.sendStatus(403);
   }
-  if (userPassword !== userInTheDatabase.password) {
+  if (!bcrypt.compareSync(userPassword, userInTheDatabase.password)) {
     return res.sendStatus(403);
   }
   res.cookie(`user_id`, `${userInTheDatabase.id}`);
@@ -212,6 +214,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const userEmail = req.body["email"];
   const userPassword = req.body["password"];
+  const hashedPassword = bcrypt.hashSync(userPassword, 10);
   if (!userEmail || !userPassword || getUserByEmail(userEmail)) {
     return res.sendStatus(400);
   } else {
@@ -219,7 +222,7 @@ app.post("/register", (req, res) => {
     users[userRandomID] = {
       id: userRandomID,
       email: userEmail,
-      password: userPassword
+      password: hashedPassword
     };
     res.cookie(`user_id`, `${userRandomID}`);
     res.redirect(`/urls`);
