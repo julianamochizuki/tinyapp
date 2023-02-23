@@ -5,43 +5,25 @@ const PORT = 8080;
 const bcrypt = require("bcryptjs");
 const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers.js');
 
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "aH45JH"
-  },
-  "ism5xK": {
-    longURL: "http://www.google.com",
-    userId: "jaG38G"
-  }
-};
+const urlDatabase = {};
 
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
+const users = {};
 
 app.set("view engine", "ejs");
+
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
 }));
+
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  const userId = req.session.user_id;
+  if (!userId) {
+    res.redirect('/login');
+  }
+  res.redirect('/urls');
 });
 
 // Passes the URL data to the template
@@ -141,6 +123,12 @@ app.post("/urls/:id/edit", (req, res) => {
 // Updates URLs
 app.post("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
+  if (!userId) {
+    return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
+  }
+  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
+    return res.status(404).send("<html><body><h2>ShortURL does not exist.\n</h2></body></html>\n");
+  }
   urlDatabase[req.params.id] = {
     longURL: req.body["longURL"],
     userId: userId
@@ -215,12 +203,8 @@ app.get("/login", (req, res) => {
 
 // Logout and clear the cookie
 app.post("/logout", (req, res) => {
-  res.clearCookie('username', `${req.body["username"]}`);
+  req.session = null;
   res.redirect(`/urls`);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.listen(PORT, () => {
