@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require('morgan');
 const cookieSession = require('cookie-session');
+const methodOverride = require('method-override');
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080;
@@ -12,12 +13,14 @@ let visitsInCurrentSession = {};
 
 app.set("view engine", "ejs");
 
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
 }));
-app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
+
 
 app.get("/", (req, res) => {
   const userId = req.session.user_id;
@@ -181,7 +184,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 // Deletes URL
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id/delete", (req, res) => {
   const userId = req.session.user_id;
   const shortUrl = req.params.id;
   const userDatabase = urlsForUser(userId, urlDatabase);
@@ -212,7 +215,7 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 // Updates URL
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
   const shortUrl = req.params.id;
   const userDatabase = urlsForUser(userId, urlDatabase);
@@ -225,6 +228,7 @@ app.post("/urls/:id", (req, res) => {
   } else {
     return res.status(404).send("<h2>The shortURL does not correspond with a long URL</h2>");
   }
+  // console.log("userDatabase", userDatabase, "urlDatabase", urlDatabase)
 });
 
 // Logout and clear the cookie
