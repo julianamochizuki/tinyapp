@@ -1,32 +1,33 @@
 const express = require("express");
+const morgan = require('morgan');
 const cookieSession = require('cookie-session');
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080;
-const bcrypt = require("bcryptjs");
 const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers.js');
 
 const urlDatabase = {};
-
 const users = {};
+let visitInCurrentSession = {};
 
 app.set("view engine", "ejs");
 
+app.use(morgan('dev'));
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
 }));
-
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   const userId = req.session.user_id;
   if (!userId) {
-    res.redirect('/login');
+    return res.redirect('/login');
   }
   res.redirect('/urls');
 });
 
-// Passes the URL data to the template
+// Displays the URL data to the template
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
   if (!userId) {
@@ -60,9 +61,15 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     longURL: req.body["longURL"],
-    userId: userId
+    userId: userId,
+    dateCreated: new Date().toLocaleDateString(),
+    // Total number of visits
+    accessCount: 0,
+    // Number of unique visits per session
+    uniqueVisits: 0
   };
   res.redirect(`/urls/${shortURL}`);
+  console.log(urlDatabase);
 });
 
 // Shows generated tinyURL
@@ -85,14 +92,27 @@ app.get("/urls/:id", (req, res) => {
 // Accesses URL page through tinyURL
 app.get("/u/:id", (req, res) => {
   const userId = req.session.user_id;
+  const shortUrl = req.params.id;
+  
   if (!userId) {
     return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
   }
-  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
+  if (!(shortUrl in urlsForUser(userId, urlDatabase))) {
     return res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
-  }
-  const longURL = urlDatabase[req.params.id]["longURL"];
-  res.redirect(longURL);
+  } else {
+    urlDatabase[shortUrl].accessCount++;
+    const longURL = urlDatabase[shortUrl]["longURL"];
+    if (!(userId in visitInCurrentSession)) {
+      visitInCurrentSession[userId] = [shortUrl];
+      urlDatabase[req.params.id].uniqueVisits += 1;
+    }
+    if (!visitInCurrentSession[userId].includes(shortUrl)) {
+      urlDatabase[req.params.id].uniqueVisits += 1;
+      visitInCurrentSession[userId].push(shortUrl);
+    }
+    res.redirect(longURL);
+    
+  }console.log(visitInCurrentSession);
 });
 
 // Deletes URLs
@@ -129,10 +149,7 @@ app.post("/urls/:id", (req, res) => {
   if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
     return res.status(404).send("<html><body><h2>ShortURL does not exist.\n</h2></body></html>\n");
   }
-  urlDatabase[req.params.id] = {
-    longURL: req.body["longURL"],
-    userId: userId
-  };
+  urlDatabase[req.params.id]["longURL"] = req.body["longURL"],
   res.redirect(`/urls`);
 });
 
@@ -144,17 +161,19 @@ app.post("/login", (req, res) => {
   if (!userInTheDatabase) {
     return res.sendStatus(403);
   }
-  if (!bcrypt.compareSync(userPassword, userInTheDatabase.password)) {
+  if (bcrypt.compareSync(userPassword, userInTheDatabase.password)) {
+    req.session["user_id"] = `${userInTheDatabase.id}`;
+    res.redirect(`/urls`);
+  } else {
     return res.sendStatus(403);
   }
-  req.session["user_id"] = `${userInTheDatabase.id}`;
-  res.redirect(`/urls`);
 });
 
 // Logout and clear the cookie
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect(`/login`);
+  visitInCurrentSession = {};
 });
 
 // Register page
@@ -167,7 +186,6 @@ app.get("/register", (req, res) => {
     user: users[userId],
   };
   res.render("register", templateVars);
-
 });
 
 // Submits new user registration
@@ -187,6 +205,7 @@ app.post("/register", (req, res) => {
     req.session["user_id"] = `${userRandomID}`;
     res.redirect(`/urls`);
   }
+  console.log(users);
 });
 
 // Login page
@@ -206,6 +225,7 @@ app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect(`/urls`);
 });
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

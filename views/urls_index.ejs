@@ -25,6 +25,9 @@
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Date Created</th>
+            <th scope="col">Number of Visits</th>
+            <th scope="col">Number of Unique Visits Per Session</th>
             <th scope="col">Edit</th>
             <th scope="col">Delete</th>
           </tr>
@@ -34,6 +37,9 @@
             <tr>
               <td><%= id %></td>
               <td><%= urls[id].longURL %></td>
+              <td><%= urls[id].dateCreated %></td>
+              <td><%= urls[id].accessCount %></td>
+              <td><%= urls[id].uniqueVisits %></td>
               <td>
                 <form method="POST" action="/urls/<%= id %>/edit">
                   <button type="edit" class="btn btn-outline-primary">Edit</button>
@@ -48,8 +54,9 @@
           <% } %>
         </tbody>
       </table>
-      <div class="shadow-sm p-3 mb-5 bg-body rounded margin:2em">
-      <a class="d-inline-flex p-2 bd-highlight text-dark" href="/urls/new">Create a New Short Link</a></div>
+      <div class="bd-callout bd-callout-info">
+        <a href="/urls/new">Create a New Short Link</a>
+      </div>
     </main>
     <!-- Bootstrap JS -->
     <script
@@ -69,3 +76,4 @@
     ></script>
   </body>
 </html>
+

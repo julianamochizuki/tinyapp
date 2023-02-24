@@ -21,7 +21,10 @@ const urlsForUser = function(id, database) {
   for (const key in database) {
     if (database[key].userId === id) {
       result[key] = {
-        longURL: database[key].longURL
+        longURL: database[key].longURL,
+        dateCreated: database[key].dateCreated,
+        accessCount: database[key].accessCount,
+        uniqueVisits: database[key].uniqueVisits
       };
     }
   }
