@@ -63,9 +63,7 @@ app.post("/urls", (req, res) => {
     longURL: req.body["longURL"],
     userId: userId,
     dateCreated: new Date().toLocaleDateString(),
-    // Total number of visits
     accessCount: 0,
-    // Number of unique visits per session
     uniqueVisits: 0
   };
   res.redirect(`/urls/${shortURL}`);
