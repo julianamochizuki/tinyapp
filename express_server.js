@@ -69,7 +69,6 @@ app.post("/urls", (req, res) => {
     uniqueVisits: 0
   };
   res.redirect(`/urls/${shortURL}`);
-  console.log(urlDatabase);
 });
 
 // Shows generated tinyURL
@@ -84,8 +83,10 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     user: users[userId],
     id: req.params.id,
-    longURL: urlDatabase
+    longURL: urlDatabase,
+    urls: urlsForUser(userId, urlDatabase)
   };
+
   res.render("urls_show", templateVars);
 });
 
@@ -111,8 +112,7 @@ app.get("/u/:id", (req, res) => {
       visitInCurrentSession[userId].push(shortUrl);
     }
     res.redirect(longURL);
-    
-  }console.log(visitInCurrentSession);
+  }
 });
 
 // Deletes URLs
@@ -205,7 +205,6 @@ app.post("/register", (req, res) => {
     req.session["user_id"] = `${userRandomID}`;
     res.redirect(`/urls`);
   }
-  console.log(users);
 });
 
 // Login page
