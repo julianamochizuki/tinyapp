@@ -17,15 +17,24 @@ const testUsers = {
 const testUrlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    userID: "aH45JH"
+    userID: "aH45JH",
+    dateCreated: "2022-02-23",
+    accessCount: 1,
+    uniqueVisits: 0
   },
   "ism5xK": {
     longURL: "http://www.google.com",
-    userId: "jaG38G"
+    userId: "jaG38G",
+    dateCreated: "2023-02-23",
+    accessCount: 1,
+    uniqueVisits: 0
   },
   "Gah48g": {
     longURL: "http://www.example.com",
-    userId: "jaG38G"
+    userId: "jaG38G",
+    dateCreated: "2023-02-23",
+    accessCount: 0,
+    uniqueVisits: 0
   }
 };
 
@@ -69,9 +78,15 @@ describe('urlsForUser', function() {
     const expectedUrls = {
       "ism5xK": {
         longURL: "http://www.google.com",
+        dateCreated: "2023-02-23",
+        accessCount: 1,
+        uniqueVisits: 0
       },
       "Gah48g": {
         longURL: "http://www.example.com",
+        dateCreated: "2023-02-23",
+        accessCount: 0,
+        uniqueVisits: 0
       }
     };
     assert.deepEqual(urlsDatabaseForUser, expectedUrls);

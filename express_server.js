@@ -8,7 +8,7 @@ const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers
 
 const urlDatabase = {};
 const users = {};
-let visitInCurrentSession = {};
+let visitsInCurrentSession = {};
 
 app.set("view engine", "ejs");
 
@@ -27,154 +27,7 @@ app.get("/", (req, res) => {
   res.redirect('/urls');
 });
 
-// Displays the URL data to the template
-app.get("/urls", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
-  }
-  const templateVars = {
-    user: users[userId],
-    urls: urlsForUser(userId, urlDatabase)
-  };
-  res.render("urls_index", templateVars);
-});
-
-// Page to create new tinyURL
-app.get("/urls/new", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.redirect('/login');
-  }
-  const templateVars = {
-    user: users[userId]
-  };
-  res.render("urls_new", templateVars);
-});
-
-// Submits new URL
-app.post("/urls", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.send("<html><body><h2>Please login to create new shortURL\n</h2>/body></html>");
-  }
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {
-    longURL: req.body["longURL"],
-    userId: userId,
-    dateCreated: new Date().toLocaleDateString(),
-    accessCount: 0,
-    uniqueVisits: 0
-  };
-  res.redirect(`/urls/${shortURL}`);
-});
-
-// Shows generated tinyURL
-app.get("/urls/:id", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
-  }
-  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
-    return res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
-  }
-  const templateVars = {
-    user: users[userId],
-    id: req.params.id,
-    longURL: urlDatabase,
-    urls: urlsForUser(userId, urlDatabase)
-  };
-
-  res.render("urls_show", templateVars);
-});
-
-// Accesses URL page through tinyURL
-app.get("/u/:id", (req, res) => {
-  const userId = req.session.user_id;
-  const shortUrl = req.params.id;
-  
-  if (!userId) {
-    return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
-  }
-  if (!(shortUrl in urlsForUser(userId, urlDatabase))) {
-    return res.status(404).send("<html><body><h2>Page not found.\n</h2><h3>The requested URL page was not found on this server.</h3></body></html>\n");
-  } else {
-    urlDatabase[shortUrl].accessCount++;
-    const longURL = urlDatabase[shortUrl]["longURL"];
-    if (!(userId in visitInCurrentSession)) {
-      visitInCurrentSession[userId] = [shortUrl];
-      urlDatabase[req.params.id].uniqueVisits += 1;
-    }
-    if (!visitInCurrentSession[userId].includes(shortUrl)) {
-      urlDatabase[req.params.id].uniqueVisits += 1;
-      visitInCurrentSession[userId].push(shortUrl);
-    }
-    res.redirect(longURL);
-  }
-});
-
-// Deletes URLs
-app.post("/urls/:id/delete", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
-  }
-  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
-    return res.status(404).send("<html><body><h2>ShortURL does not exist.\n</h2></body></html>\n");
-  }
-  delete urlDatabase[req.params.id];
-  res.redirect(`/urls`);
-});
-
-// Redirects to the page to update URL
-app.post("/urls/:id/edit", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
-  }
-  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
-    return res.status(404).send("<html><body><h2>ShortURL does not exist.\n</h2></body></html>\n");
-  }
-  res.redirect(`/urls/${req.params.id}`);
-});
-
-// Updates URLs
-app.post("/urls/:id", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.send("<html><body><h2>Please login or register first.</h2></body></html>");
-  }
-  if (!(req.params.id in urlsForUser(userId, urlDatabase))) {
-    return res.status(404).send("<html><body><h2>ShortURL does not exist.\n</h2></body></html>\n");
-  }
-  urlDatabase[req.params.id]["longURL"] = req.body["longURL"],
-  res.redirect(`/urls`);
-});
-
-// Submits login info and sets the cookie
-app.post("/login", (req, res) => {
-  const userEmail = req.body["email"];
-  const userPassword = req.body["password"];
-  const userInTheDatabase = getUserByEmail(userEmail, users);
-  if (!userInTheDatabase) {
-    return res.sendStatus(403);
-  }
-  if (bcrypt.compareSync(userPassword, userInTheDatabase.password)) {
-    req.session["user_id"] = `${userInTheDatabase.id}`;
-    res.redirect(`/urls`);
-  } else {
-    return res.sendStatus(403);
-  }
-});
-
-// Logout and clear the cookie
-app.post("/logout", (req, res) => {
-  req.session = null;
-  res.redirect(`/login`);
-  visitInCurrentSession = {};
-});
-
-// Register page
+// User registration page
 app.get("/register", (req, res) => {
   const userId = req.session.user_id;
   if (users[userId]) {
@@ -191,8 +44,12 @@ app.post("/register", (req, res) => {
   const userEmail = req.body["email"];
   const userPassword = req.body["password"];
   const hashedPassword = bcrypt.hashSync(userPassword, 10);
-  if (!userEmail || !userPassword || getUserByEmail(userEmail, users)) {
-    return res.sendStatus(400);
+  const userInTheDatabase = getUserByEmail(userEmail, users);
+  if (!userEmail || !userPassword) {
+    return res.status(400).send("<h2>Please enter a username and a password.</h2>");
+  }
+  if (userInTheDatabase) {
+    return res.status(400).send("<h2>The username already exists.<h2>");
   } else {
     const userRandomID = generateRandomString();
     users[userRandomID] = {
@@ -217,12 +74,165 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
+// Submits login info and sets the cookie
+app.post("/login", (req, res) => {
+  const userEmail = req.body["email"];
+  const userPassword = req.body["password"];
+  const userInTheDatabase = getUserByEmail(userEmail, users);
+  if (!userInTheDatabase) {
+    return res.status(403).send("<h2>There is no account associated with this email address.<h2>");
+  }
+  if (bcrypt.compareSync(userPassword, userInTheDatabase.password)) {
+    req.session["user_id"] = `${userInTheDatabase.id}`;
+    res.redirect(`/urls`);
+  } else {
+    return res.status(403).send("<h2>Username and password do not match.<h2>");
+  }
+});
+
+// Displays the user's database
+app.get("/urls", (req, res) => {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(401).send("<h2>Please login or register first to access this page.</h2>");
+  }
+  const templateVars = {
+    user: users[userId],
+    urls: urlsForUser(userId, urlDatabase)
+  };
+  res.render("urls_index", templateVars);
+});
+
+// Page to create new tinyURL
+app.get("/urls/new", (req, res) => {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.redirect('/login');
+  }
+  const templateVars = {
+    user: users[userId]
+  };
+  res.render("urls_new", templateVars);
+});
+
+// Submits new URL
+app.post("/urls", (req, res) => {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(401).send("<h2>Please login or register first to create a new shortURL</h2>");
+  }
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = {
+    longURL: req.body["longURL"],
+    userId: userId,
+    dateCreated: new Date().toLocaleDateString(),
+    accessCount: 0,
+    uniqueVisits: 0
+  };
+  res.redirect(`/urls/${shortURL}`);
+});
+
+// Displays generated tinyURL
+app.get("/urls/:id", (req, res) => {
+  const userId = req.session.user_id;
+  const shortUrl = req.params.id;
+  const userDatabase = urlsForUser(userId, urlDatabase);
+  if (!userId) {
+    return res.status(401).send("<h2>Please login or register first to access this page.</h2>");
+  }
+  if (shortUrl in userDatabase) {
+    const templateVars = {
+      user: users[userId],
+      id: shortUrl,
+      longURL: urlDatabase,
+      urls: userDatabase
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    return res.status(404).send("<h2>Page not found.\n</h2><h3>The requested URL page was not found.</h3>");
+  }
+});
+
+// Accesses longURL page through tinyURL
+app.get("/u/:id", (req, res) => {
+  const userId = req.session.user_id;
+  const shortUrl = req.params.id;
+  const userDatabase = urlsForUser(userId, urlDatabase);
+  if (!userId) {
+    return res.status(401).send("<h2>Please login or register first to access this page.</h2>");
+  }
+  if (shortUrl in userDatabase) {
+    // Count total number of visits
+    urlDatabase[shortUrl].accessCount++;
+    // Count unique visits (1 visit per session per shortURL)
+    if (!(userId in visitsInCurrentSession)) {
+      visitsInCurrentSession[userId] = [shortUrl];
+      urlDatabase[shortUrl].uniqueVisits += 1;
+    }
+    if (!visitsInCurrentSession[userId].includes(shortUrl)) {
+      urlDatabase[shortUrl].uniqueVisits += 1;
+      visitsInCurrentSession[userId].push(shortUrl);
+    }
+    const longURL = urlDatabase[shortUrl]["longURL"];
+    res.redirect(longURL);
+  } else {
+    return res.status(404).send("<h2>Page not found.\n</h2><h3>The requested URL page was not found.</h3>");
+  }
+});
+
+// Deletes URL
+app.post("/urls/:id/delete", (req, res) => {
+  const userId = req.session.user_id;
+  const shortUrl = req.params.id;
+  const userDatabase = urlsForUser(userId, urlDatabase);
+  if (!userId) {
+    return res.status(401).send("<h3>Please login or register first.</h3><h2>You do not have authorization to delete this URL</h2>");
+  }
+  if (shortUrl in userDatabase) {
+    delete urlDatabase[shortUrl];
+    res.redirect(`/urls`);
+  } else {
+    return res.status(404).send("<h2>ShortURL does not exist.</h2>");
+  }
+});
+
+// Redirects to the edit page
+app.post("/urls/:id/edit", (req, res) => {
+  const userId = req.session.user_id;
+  const shortUrl = req.params.id;
+  const userDatabase = urlsForUser(userId, urlDatabase);
+  if (!userId) {
+    return res.status(401).send("<h3>Please login or register first.</h3><h2>You do not have authorization to edit this URL</h2>");
+  }
+  if (shortUrl in userDatabase) {
+    res.redirect(`/urls/${shortUrl}`);
+  } else {
+    return res.status(404).send("<h2>The shortURL does not correspond with a long URL</h2>");
+  }
+});
+
+// Updates URL
+app.post("/urls/:id", (req, res) => {
+  const userId = req.session.user_id;
+  const shortUrl = req.params.id;
+  const userDatabase = urlsForUser(userId, urlDatabase);
+  if (!userId) {
+    return res.status(401).send("<h2>Please login or register first to access this page.</h2>");
+  }
+  if (shortUrl in userDatabase) {
+    urlDatabase[shortUrl]["longURL"] = req.body["longURL"],
+    res.redirect(`/urls`);
+  } else {
+    return res.status(404).send("<h2>The shortURL does not correspond with a long URL</h2>");
+  }
+});
+
 // Logout and clear the cookie
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect(`/urls`);
+  res.redirect(`/login`);
+  visitsInCurrentSession = {};
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

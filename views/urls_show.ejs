@@ -14,7 +14,7 @@
     <%- include ('partials/_header') %>
     <div class="card text-center">
       <div class="container d-none d-lg-block" style="max-width: 150rem;">
-        <div class="card-header">TinyURL for: <%= longURL[id].longURL %></div>
+        <div class="card-header">TinyURL for: <%= urls[id].longURL %></div>
           <div class="card-body text-secondary">
             <h5 class="card-title">Short URL ID: <a href="/u/<%= id %>"><%= id %></a></h5>
             <p class="card-text">Date Created: <%= urls[id].dateCreated %></p>
