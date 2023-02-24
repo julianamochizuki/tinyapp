@@ -42,7 +42,7 @@
               <td><%= urls[id].uniqueVisits %></td>
               <td>
                 <form method="POST" action="/urls/<%= id %>/edit">
-                  <button type="edit" class="btn btn-outline-primary">Edit</button>
+                  <button type="edit" class="btn btn-outline-primary" style=" color: #689cc1; border-color: #689cc1;">Edit</button>
                 </form>
               </td>
               <td>
@@ -54,8 +54,8 @@
           <% } %>
         </tbody>
       </table>
-      <div class="alert alert-light" role="alert">
-        Click <a href="/urls/new" class="alert-link">here</a> to create a new short link.
+      <div class="alert alert-light col-md-3" role="alert" style="background-color: #e2e8ed">
+        Click <a href="/urls/new" class="alert-link" style="color: #689cc1">here</a> to create a new short link.
       </div>
     </main>
     <!-- Bootstrap JS -->
