@@ -24,7 +24,8 @@ const urlsForUser = function(id, database) {
         longURL: database[key].longURL,
         dateCreated: database[key].dateCreated,
         accessCount: database[key].accessCount,
-        uniqueVisits: database[key].uniqueVisits
+        uniqueVisits: database[key].uniqueVisits,
+        uniqueVisitors: database[key].uniqueVisitors
       };
     }
   }

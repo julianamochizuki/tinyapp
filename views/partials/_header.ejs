@@ -1,6 +1,6 @@
 <header>
-  <nav class="navbar navbar-expand-md" style="background-color: #689cc1">
-    <a class="navbar-brand text-white" href="/urls" style="font-family: sans-serif; font-size: x-large;">TinyApp</a>
+  <nav class="navbar navbar-expand-md" style="background-color: #4285F4">
+    <a class="navbar-brand text-white" href="/" style="font-family: 'Quicksand', sans-serif;; font-size: x-large;">TinyApp</a>
     <button
       class="navbar-toggler"
       type="button"
@@ -18,17 +18,17 @@
         <a class="nav-item nav-link text-white" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #689cc1">
+    <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #4285F4">
       <% if (user) { %>
-        <div class="nav-item" style="margin: 1em">Logged in as: <%= user.email %></div>
+        <div class="nav-item text-white" style="margin: 1em">Logged in as: <%= user.email %></div>
         <form class="form-inline my-2 my-lg-2" action="/logout" method="POST">
-          <button type="submit" class="btn btn-outline-dark">Logout</button>
+          <button type="submit" class="btn btn-outline text-white">Logout</button>
         </form>
       </nav>
       <% } else { %>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
           <div class="navbar-nav">
-            <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #689cc1"></nav>
+            <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #4285F4"></nav>
             <a class="nav-item nav-link my-2 my-lg-2 text-white" href="/login">Login</a>
             <a class="nav-item nav-link my-2 my-lg-2 text-white" href="/register">Register</a>
           </div>

@@ -14,6 +14,9 @@
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap" rel="stylesheet">
     <title>TinyApp</title>
   </head>
   <body>
@@ -27,7 +30,7 @@
             <th scope="col">Long URL</th>
             <th scope="col">Date Created</th>
             <th scope="col">Number of Visits</th>
-            <th scope="col">Number of Unique Visits Per Session</th>
+            <th scope="col">Number of Unique Visits</th>
             <th scope="col">Edit</th>
             <th scope="col">Delete</th>
           </tr>
@@ -35,14 +38,14 @@
         <tbody>
           <% for (let id in urls) { %>
             <tr>
-              <td><%= id %></td>
+              <td><a style="color: #4285F4" href="/u/<%= id %>"><%= id %></a></td>
               <td><%= urls[id].longURL %></td>
               <td><%= urls[id].dateCreated %></td>
               <td><%= urls[id].accessCount %></td>
               <td><%= urls[id].uniqueVisits %></td>
               <td>
                 <form method="POST" action="/urls/<%= id %>/edit">
-                  <button type="edit" class="btn btn-outline-primary" style=" color: #689cc1; border-color: #689cc1;">Edit</button>
+                  <button type="edit" class="btn btn-outline-primary" style=" color: #4285F4; border-color: #4285F4;">Edit</button>
                 </form>
               </td>
               <td>
@@ -55,7 +58,7 @@
         </tbody>
       </table>
       <div class="alert alert-light col-md-3" role="alert" style="background-color: #e2e8ed">
-        Click <a href="/urls/new" class="alert-link" style="color: #689cc1">here</a> to create a new short link.
+        Click <a href="/urls/new" class="alert-link" style="color: #4285F4">here</a> to create a new short link.
       </div>
     </main>
     <!-- Bootstrap JS -->
